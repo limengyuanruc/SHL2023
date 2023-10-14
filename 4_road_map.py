@@ -20,6 +20,9 @@ import geopandas
 import warnings
 warnings.filterwarnings("ignore")
 
+
+
+
 locs = ['Hand', 'Bag', 'Hips', 'Torso']
 
   # 'Hand'
@@ -128,16 +131,100 @@ filenames = {
         'Label': '/DATA2/lvxiaoling/limengyuan/SHL2023/test/Label.pkl'
     }
 }
-def fit_transform(data):
-    result_dict = {}
-    data_u = data.unique()
-    for idx, item in enumerate(data_u):
-        if item!= 'nan':
-            result_dict[item] = idx+1
 
-    result_dict['nan'] = 0  # 添加对应字符串 '0' 的索引映射
-    return data.map(result_dict)
-
+dics = {'raliways_class': {'rail': 1,
+  'narrow_gauge': 2,
+  'subway': 3,
+  'light_rail': 4,
+  'tram': 5,
+  'miniature_railway': 6,
+  'monorail': 7,
+  'nan': 0},
+ 'transport_class': {'bus_stop': 1,
+  'bus_station': 2,
+  'taxi': 3,
+  'railway_station': 4,
+  'airport': 5,
+  'tram_stop': 6,
+  'airfield': 7,
+  'apron': 8,
+  'ferry_terminal': 9,
+  'helipad': 10,
+  'nan': 0},
+ 'traffic_class': {'crossing': 1,
+  'parking': 2,
+  'street_lamp': 3,
+  'parking_bicycle': 4,
+  'traffic_signals': 5,
+  'parking_multistorey': 6,
+  'fuel': 7,
+  'mini_roundabout': 8,
+  'speed_camera': 9,
+  'turning_circle': 10,
+  'lock_gate': 11,
+  'marina': 12,
+  'service': 13,
+  'parking_underground': 14,
+  'pier': 15,
+  'stop': 16,
+  'motorway_junction': 17,
+  'weir': 18,
+  'slipway': 19,
+  'nan': 0},
+ 'landuse_class': {'residential': 1,
+  'park': 2,
+  'retail': 3,
+  'grass': 4,
+  'commercial': 5,
+  'cemetery': 6,
+  'forest': 7,
+  'scrub': 8,
+  'industrial': 9,
+  'nature_reserve': 10,
+  'farmland': 11,
+  'meadow': 12,
+  'recreation_ground': 13,
+  'allotments': 14,
+  'orchard': 15,
+  'farmyard': 16,
+  'quarry': 17,
+  'heath': 18,
+  'military': 19,
+  'vineyard': 20,
+  'nan': 0},
+ 'roads_class': {'path': 1,
+  'residential': 2,
+  'unclassified': 3,
+  'cycleway': 4,
+  'footway': 5,
+  'steps': 6,
+  'tertiary': 7,
+  'primary': 8,
+  'pedestrian': 9,
+  'trunk': 10,
+  'service': 11,
+  'secondary': 12,
+  'primary_link': 13,
+  'tertiary_link': 14,
+  'bridleway': 15,
+  'track': 16,
+  'trunk_link': 17,
+  'track_grade2': 18,
+  'track_grade1': 19,
+  'motorway': 20,
+  'living_street': 21,
+  'track_grade4': 22,
+  'track_grade3': 23,
+  'track_grade5': 24,
+  'secondary_link': 25,
+  'motorway_link': 26,
+  'nan': 0},
+ 'roads_code': {'515.0': 1,
+  '512.0': 2,
+  '511.0': 3,
+  '514.0': 4,
+  '513.0': 5,
+  'nan': 0}}
 
 
 #使用了四个数据集:路网、铁路、transport、traffic、landuse
@@ -172,15 +259,17 @@ def get_osm(dataset='valid',loc='Hand'):
         print('join finish...')
         data_gdp1 = data_gdp1.sort_values(by=['idx', 'distances'])
         data_gdp1 = data_gdp1.drop_duplicates(subset='idx', keep='first')
-        data['{}_class'.format(dir)] = fit_transform(data_gdp1['fclass'].astype(str)).values
+        data['{}_class'.format(dir)] = data_gdp1['fclass'].astype(str).values
 
         if [dir][0] in ['roads']:
 
-            data['{}_code'.format(dir)] =fit_transform( (data_gdp1['code']//10).astype(str))
-    
+            data['{}_code'.format(dir)] = (data_gdp1['code']//10).astype(str)
+    for class_i in [ 'raliways_class','transport_class','traffic_class','landuse_class','roads_class','roads_code']:
+        data[class_i] = data[class_i].map(dics[class_i])
+
     data.to_pickle(data_dir)
 for dataset in ['valid','train']:
-    for loc in ['Hand', 'Bag', 'Hips', 'Torso']:#['Hand', 'Bag', 'Hips', 'Torso']:
+    for loc in [ 'Hand']:#['Hand', 'Bag', 'Hips', 'Torso']:
         print(dataset, loc)
         get_osm(dataset=dataset, loc=loc)
 dataset = 'test'
