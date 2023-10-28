@@ -316,9 +316,38 @@ if args.label_process:
             print("DataFrames are not the same")
             print(type,'not ok')
     
+def traj_fun(filename):
+    train_label = pd.read_pickle(filename)
+    train_label['index'] = train_label.index
+    train_label['timestamp_diff'] = abs(train_label['timestamp'].diff()) >10
+    train_label['trajectory_id'] = train_label['timestamp_diff'].cumsum()
+    train_label = train_label.drop('timestamp_diff', axis=1)
+    print(len(train_label['trajectory_id'].unique()))
+    train_label.to_pickle(filename)
+    return train_label
+
+idx_start = 0
+for data in ['train','valid','test']:
+    print(filenames[data]['Label'])
+    label = pd.read_pickle(filenames[data]['Label'].replace('.txt','.pkl'))
+    label['idx'] = np.arange(len(label)) 
+    label['idx'] = label['idx']+ idx_start
+    idx_start += len(label['idx'])
+    label.to_pickle(filenames[data]['Label'].replace('.txt','.pkl'))
 
 
+label_idx_start = 0
+for data in ['train','valid','test']:
 
+    print(filenames[data]['Label'])
+    label = pd.read_pickle(filenames[data]['Label'])
+    if data =='test':
+      label['label'] = -1000
+    day = label['timestamp']//(1000 * 60 *60 * 24)
+    diff =( abs(label['label'].diff())>0) | (abs(day.diff())>0 )
+    label['label_idx'] = diff.cumsum() + label_idx_start
+    label.to_pickle(filenames[data]['Label'])
+    label_idx_start += len(label['label_idx'].unique())
 
 '''  
 import osmnx as ox
